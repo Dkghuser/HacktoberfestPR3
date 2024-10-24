@@ -1,0 +1,144 @@
+#Weather Dashboard Using Rest APIs in Java (Using OpenWeather API)
+Requirements:
+Java Development Kit (JDK) installed.
+Maven/Gradle to manage dependencies (if necessary).
+API Key from OpenWeather.
+Libraries Used:
+javax.swing for the GUI.
+java.net.HttpURLConnection and java.io for making REST API calls.
+
+Step-by-Step Code:
+Create a Maven project (optional) if you want to manage dependencies.
+
+#Add this Java code:
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import org.json.JSONObject;
+
+public class WeatherDashboard extends JFrame {
+    private JTextField cityTextField;
+    private JLabel weatherLabel;
+
+    // OpenWeatherMap API key
+    private static final String API_KEY = "API_KEY"; // Replace with your OpenWeather API Key
+
+    public WeatherDashboard() {
+        // Create the GUI components
+        setTitle("Weather Dashboard");
+        setSize(400, 300);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+
+        // Input Panel
+        JPanel inputPanel = new JPanel();
+        cityTextField = new JTextField(20);
+        JButton getWeatherButton = new JButton("Get Weather");
+
+        inputPanel.add(new JLabel("Enter city: "));
+        inputPanel.add(cityTextField);
+        inputPanel.add(getWeatherButton);
+
+        // Weather Display
+        weatherLabel = new JLabel("Weather Info: ");
+        weatherLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        weatherLabel.setFont(new Font("Arial", Font.BOLD, 16));
+
+        // Add to frame
+        add(inputPanel, BorderLayout.NORTH);
+        add(weatherLabel, BorderLayout.CENTER);
+
+        // Action listener for the button
+        getWeatherButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String city = cityTextField.getText().trim();
+                if (!city.isEmpty()) {
+                    getWeatherInfo(city);
+                } else {
+                    weatherLabel.setText("Please enter a valid city name.");
+                }
+            }
+        });
+    }
+
+    // Function to get weather information using OpenWeather API
+    private void getWeatherInfo(String city) {
+        try {
+            String urlString = "http://api.openweathermap.org/data/2.5/weather?q=" + city + "&appid=" + API_KEY + "&units=metric";
+            URL url = new URL(urlString);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String inputLine;
+            StringBuffer content = new StringBuffer();
+            while ((inputLine = in.readLine()) != null) {
+                content.append(inputLine);
+            }
+
+            in.close();
+            conn.disconnect();
+
+            parseAndDisplayWeather(content.toString());
+        } catch (Exception e) {
+            weatherLabel.setText("Error fetching weather data.");
+            e.printStackTrace();
+        }
+    }
+
+    // Function to parse JSON response and display weather info
+    private void parseAndDisplayWeather(String json) {
+        try {
+            JSONObject obj = new JSONObject(json);
+            String cityName = obj.getString("name");
+            JSONObject main = obj.getJSONObject("main");
+            double temp = main.getDouble("temp");
+            int humidity = main.getInt("humidity");
+            JSONObject weather = obj.getJSONArray("weather").getJSONObject(0);
+            String description = weather.getString("description");
+
+            weatherLabel.setText("<html>" + "City: " + cityName + "<br>" + "Temperature: " + temp + "°C" + "<br>" +
+                    "Humidity: " + humidity + "%" + "<br>" + "Condition: " + description + "</html>");
+        } catch (Exception e) {
+            weatherLabel.setText("Error parsing weather data.");
+            e.printStackTrace();
+        }
+    }
+
+    // Main method to launch the GUI
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                WeatherDashboard frame = new WeatherDashboard();
+                frame.setVisible(true);
+            }
+        });
+    }
+}
+
+
+#Set Up Dependencies:
+If using Maven, include the org.json library in your pom.xml:
+
+
+<dependency>
+    <groupId>org.json</groupId>
+    <artifactId>json</artifactId>
+    <version>20210307</version>
+</dependency>
+
+
+#Get OpenWeather API Key:
+Sign up at OpenWeather to get your free API key.
+Replace "API_KEY" in the code with your actual API key.
+
+#Run the Java Program:
+Compile and run the program. It will open a simple GUI where you can input the city name and fetch real-time weather information.
